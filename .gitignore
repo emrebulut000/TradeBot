@@ -1,0 +1,10 @@
+# --- Güvenlik (BUNLARI ASLA YÜKLEME) ---
+config.py
+__pycache__/
+*.db
+trade_gecmisi.db
+
+# --- Gereksiz Sistem Dosyaları ---
+.DS_Store
+.vscode/
+*.pyc
