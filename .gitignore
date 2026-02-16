@@ -8,3 +8,5 @@ trade_gecmisi.db
 .DS_Store
 .vscode/
 *.pyc
+*.pem
+bot_anahtari.pem
