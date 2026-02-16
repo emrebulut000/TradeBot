@@ -53,15 +53,39 @@ def emir_ver(taraf, fiyat, sebep):
     global pozisyonda_mi, alis_fiyati
     try:
         if taraf == 'buy':
-            miktar = exchange_trade.amount_to_precision(cfg.SYMBOL, cfg.TRADE_MIKTARI_USDT / fiyat)
+            # 1. Alınacak miktarı hesapla
+            miktar_str = exchange_trade.amount_to_precision(cfg.SYMBOL, cfg.TRADE_MIKTARI_USDT / fiyat)
+            miktar = float(miktar_str)
+            
+            # 🔥 BİNANCE'E EMRİ İLET (Eksik olan kısım buydu)
+            try:
+                exchange_trade.create_market_buy_order(cfg.SYMBOL, miktar)
+            except Exception as b_hata:
+                telegram_gonder(f"⚠️ BİNANCE ALIM HATASI: Bakiyen yetersiz olabilir veya API hatası!\nDetay: {b_hata}")
+                return False # Hata varsa işlemi durdur
+            
+            # 2. İşlem başarılıysa sistemi güncelle
             pozisyonda_mi = True
             alis_fiyati = fiyat
-            db.db_ekle("ALIM", fiyat, float(miktar), sebep)
+            db.db_ekle("ALIM", fiyat, miktar, sebep)
             
             msg = f"🟢 ALIM YAPILDI!\nFiyat: ${fiyat:.2f}\nSebep: {sebep}"
             log_yaz(msg)
             telegram_gonder(msg)
-        else:
+            
+        else: # SATIŞ
+            # 1. Satılacak miktarı hesapla (Daha önce aldığımız miktar kadar)
+            miktar_str = exchange_trade.amount_to_precision(cfg.SYMBOL, cfg.TRADE_MIKTARI_USDT / alis_fiyati)
+            miktar = float(miktar_str)
+            
+            # 🔥 BİNANCE'E EMRİ İLET
+            try:
+                exchange_trade.create_market_sell_order(cfg.SYMBOL, miktar)
+            except Exception as b_hata:
+                telegram_gonder(f"⚠️ BİNANCE SATIŞ HATASI: {b_hata}")
+                return False
+
+            # 2. İşlem başarılıysa sistemi güncelle
             pozisyonda_mi = False
             db.db_ekle("SATIŞ", fiyat, 0, sebep)
             
@@ -71,10 +95,11 @@ def emir_ver(taraf, fiyat, sebep):
             msg = f"🔴 SATIŞ YAPILDI!\nFiyat: ${fiyat:.2f}\nSebep: {sebep}\nSonuç: {durum} (%{kar_zarar:.2f})"
             log_yaz(msg)
             telegram_gonder(msg)
+            
         return True
     except Exception as e:
         log_yaz(f"❌ Emir Hatası: {e}")
-        telegram_gonder(f"⚠️ HATA: {e}")
+        telegram_gonder(f"⚠️ SİSTEM HATASI: {e}")
         return False
 
 # --- ANA DÖNGÜ (Server Loop) ---
