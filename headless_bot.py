@@ -20,12 +20,17 @@ def baglanti_kur():
     global exchange_data, exchange_trade
     # 1. Veri (Gerçek)
     exchange_data = ccxt.binance({'enableRateLimit': True, 'options': {'defaultType': 'spot'}})
+    
     # 2. İşlem (Sanal - Testnet)
     exchange_trade = ccxt.binance({
         'apiKey': cfg.API_KEY, 'secret': cfg.SECRET_KEY,
         'enableRateLimit': True, 'options': {'defaultType': 'spot'}
     })
     exchange_trade.set_sandbox_mode(True)
+    
+    # 🔥 İŞTE EKSİK OLAN SİHİRLİ KOMUT (Menüyü İndir)
+    exchange_trade.load_markets()
+    print("✅ Binance piyasa rehberi başarıyla yüklendi, emir vermeye hazır!")
 
 def veri_cek():
     try:
